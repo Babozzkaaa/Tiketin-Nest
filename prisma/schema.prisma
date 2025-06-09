@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+model User {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100)
+  email       String   @unique @db.VarChar(100)
+  password    String   @db.VarChar(255)
+  phone_number String  @db.VarChar(20)
+  role         Role    @default(USER)
+
+  tickets     Ticket[]
+
+  @@map("users")
+}
+
+model Station {
+  id     Int    @id @default(autoincrement())
+  name   String @db.VarChar(100)
+  code   String @unique @db.VarChar(10)
+  city   String @db.VarChar(100)
+  address String @db.VarChar(255)
+
+  departures Schedule[] @relation("DepartureStation")
+  arrivals   Schedule[] @relation("ArrivalStation")
+
+  @@map("stations")
+}
+
+model Train {
+  id           Int        @id @default(autoincrement())
+  name         String     @db.VarChar(100)
+  code         String     @unique @db.VarChar(20)
+  train_type   String     @db.VarChar(50)
+  carriages    Carriage[]
+  schedules    Schedule[]
+
+  @@map("trains")
+}
+
+model Carriage {
+  id              Int       @id @default(autoincrement())
+  train_id        Int
+  carriage_number Int
+  carriage_type   String    @db.VarChar(50)
+  seat_capacity   Int
+
+  train           Train     @relation(fields: [train_id], references: [id])
+  seats           Seat[]
+
+  @@map("carriages")
+}
+
+model Seat {
+  id          Int       @id @default(autoincrement())
+  carriage_id Int
+  seat_number String    @db.VarChar(10)
+
+  carriage    Carriage  @relation(fields: [carriage_id], references: [id])
+  tickets     Ticket[]
+
+  @@map("seats")
+}
+
+model Schedule {
+  id                    Int      @id @default(autoincrement())
+  train_id              Int
+  departure_station_id  Int
+  arrival_station_id    Int
+  departure_time        DateTime
+  arrival_time          DateTime
+  date                  DateTime
+  price                 Decimal  @db.Decimal(10,2)
+
+  train                 Train    @relation(fields: [train_id], references: [id])
+  departure_station     Station  @relation("DepartureStation", fields: [departure_station_id], references: [id])
+  arrival_station       Station  @relation("ArrivalStation", fields: [arrival_station_id], references: [id])
+  tickets               Ticket[]
+
+  @@map("schedules")
+}
+
+model Ticket {
+  id               Int       @id @default(autoincrement())
+  user_id          Int
+  schedule_id      Int
+  seat_id          Int
+  passenger_name   String    @db.VarChar(100)
+  passenger_id_num String    @db.VarChar(50)
+  status           String    @default("booked") // booked, paid, canceled
+
+  user             User      @relation(fields: [user_id], references: [id])
+  schedule         Schedule  @relation(fields: [schedule_id], references: [id])
+  seat             Seat      @relation(fields: [seat_id], references: [id])
+  payment          Payment?
+
+  @@map("tickets")
+}
+
+model Payment {
+  id            Int      @id @default(autoincrement())
+  ticket_id     Int      @unique
+  payment_method String   @db.VarChar(50) // VA, QRIS, etc
+  payment_status String   @db.VarChar(20) // pending, success, failed
+  payment_date   DateTime
+
+  ticket         Ticket   @relation(fields: [ticket_id], references: [id])
+
+  @@map("payments")
+}
