@@ -21,6 +21,12 @@ export class JwtGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.jwtSecretKey,
       });
+      // Add this debug log to see the actual payload
+      console.log('=== JWT PAYLOAD DEBUG ===');
+      console.log('Payload:', JSON.stringify(payload));
+      console.log('Payload keys:', Object.keys(payload));
+      console.log('========================');
+
       request['user'] = payload;
     } catch (error) {
       throw new UnauthorizedException('Token verification failed');

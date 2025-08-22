@@ -65,8 +65,15 @@ export class AuthController {
   @UseGuards(RefreshJwtGuard)
   @Post('refresh')
   async refreshToken(@Request() req) {
-    console.log('refreshed');
 
     return await this.authService.refreshToken(req.user);
+  }
+
+  @ApiOperation({ summary: 'Logout' })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
+  @ApiBearerAuth()
+  @Post('logout')
+  async logout(@Request() req) {
+    return await this.authService.logout(req.user);
   }
 }

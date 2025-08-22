@@ -1,0 +1,109 @@
+import { Controller, HttpStatus } from '@nestjs/common';
+import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
+import { {{className}}Repository, type Filter } from '{{importPath}}/repositories';
+import { {{className}}Service } from '{{importPath}}/services';
+import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
+import { ResponseEntity } from 'src/common/entities/response.entity';
+import { Create{{className}}Dto, Update{{className}}Dto } from '{{importPath}}/dtos';
+import { ApiTags } from '@nestjs/swagger';
+
+@ApiTags('{{className}}')
+@Controller({
+  path: '{{variableName}}',
+  version: '1',
+})
+export class {{className}}MicroserviceController {
+  constructor(
+    private readonly {{variableName}}Service: {{className}}Service,
+    private readonly {{variableName}}Repository: {{className}}Repository,
+  ) {}
+
+  @MessagePattern('{{variableName}}.create')
+  public async create(@Payload() create{{className}}Dto: Create{{className}}Dto) {
+    try {
+      const data = await this.{{variableName}}Service.create(create{{className}}Dto);
+      return new ResponseEntity({
+        data,
+        message: 'success',
+      });
+    } catch (error) {
+      throw new RpcException(
+        new ResponseEntity({
+          status: HttpStatus.BAD_REQUEST,
+          message: error.message
+        })
+      );
+    }
+  }
+
+  @MessagePattern('{{variableName}}.find')
+  public async find(@Payload() filter: Omit<Filter, 'include'>) {
+    return this.{{variableName}}Repository.find(filter);
+  }
+
+  @MessagePattern('{{variableName}}.paginate')
+  public async index(@Payload() paginateDto: PaginationQueryDto) {
+    try {
+      const data = await this.{{variableName}}Service.paginate(paginateDto);
+      return new ResponseEntity({
+        data,
+        message: 'success',
+      });
+    } catch (error) {
+      throw new RpcException(error.message, HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @MessagePattern('{{variableName}}.detail')
+  public async detail(@Payload('id') id: string) {
+    try {
+      const data = await this.{{variableName}}Service.detail(id);
+
+      return new ResponseEntity({
+        data,
+        message: 'success',
+      });
+    } catch (error) {
+      throw new RpcException(error.message, HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @MessagePattern('{{variableName}}.destroy')
+  public async destroy(@Payload('id') id: string) {
+    try {
+      const data = await this.{{variableName}}Service.destroy(id);
+      return new ResponseEntity({
+        data,
+        message: 'success',
+      });
+    } catch (error) {
+      throw new RpcException(
+        new ResponseEntity({
+          status: HttpStatus.BAD_REQUEST,
+          message: error.message
+        })
+      );
+    }
+  }
+
+  @MessagePattern(':id')
+  public async update(
+    @Payload('id') id: string,
+    @Payload() update{{className}}Dto: Update{{className}}Dto,
+  ) {
+    try {
+      const data = await this.{{variableName}}Service.update(id, update{{className}}Dto);
+      return new ResponseEntity({
+        data,
+        message: 'success',
+      });
+    } catch (error) {
+      throw new RpcException(
+        new ResponseEntity({
+          status: HttpStatus.BAD_REQUEST,
+          message: error.message
+        })
+      );
+    }
+  }
+}

@@ -67,6 +67,8 @@ rxjs \
 typeorm \
 typeorm-extension \
 winston \
+inquirer \
+handlebars \
 zod
 
 dev-dependencies

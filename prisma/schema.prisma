@@ -10,13 +10,31 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 enum Role {
   USER
   ADMIN
+}
+
+enum CarriageType {
+  ECONOMY
+  BUSINESS
+  EXECUTIVE
+  FIRST_CLASS
+}
+
+enum TrainType {
+  PASSENGER
+  FREIGHT
+  HIGH_SPEED
+  CARGO
+  BULK
+  INTERCITY
+  HIGH_SPEED_CARGO
+  METRO
 }
 model User {
   id          Int      @id @default(autoincrement())
@@ -48,7 +66,8 @@ model Train {
   id           Int        @id @default(autoincrement())
   name         String     @db.VarChar(100)
   code         String     @unique @db.VarChar(20)
-  train_type   String     @db.VarChar(50)
+  train_type   TrainType  @default(PASSENGER)
+  capacity     Int        @default(0)
   carriages    Carriage[]
   schedules    Schedule[]
 
@@ -56,13 +75,14 @@ model Train {
 }
 
 model Carriage {
-  id              Int       @id @default(autoincrement())
+  id              Int          @id @default(autoincrement())
   train_id        Int
   carriage_number Int
-  carriage_type   String    @db.VarChar(50)
+  carriage_type   CarriageType @default(ECONOMY)
   seat_capacity   Int
+  price           Decimal      @db.Decimal(10,2) @default(0.00)
 
-  train           Train     @relation(fields: [train_id], references: [id])
+  train           Train        @relation(fields: [train_id], references: [id])
   seats           Seat[]
 
   @@map("carriages")
@@ -87,7 +107,6 @@ model Schedule {
   departure_time        DateTime
   arrival_time          DateTime
   date                  DateTime
-  price                 Decimal  @db.Decimal(10,2)
 
   train                 Train    @relation(fields: [train_id], references: [id])
   departure_station     Station  @relation("DepartureStation", fields: [departure_station_id], references: [id])
@@ -102,26 +121,31 @@ model Ticket {
   user_id          Int
   schedule_id      Int
   seat_id          Int
+  booking_reference String   @db.VarChar(100)
   passenger_name   String    @db.VarChar(100)
   passenger_id_num String    @db.VarChar(50)
+  passenger_email  String?   @db.VarChar(100)
+  passenger_phone  String?   @db.VarChar(20)
   status           String    @default("booked") // booked, paid, canceled
 
   user             User      @relation(fields: [user_id], references: [id])
   schedule         Schedule  @relation(fields: [schedule_id], references: [id])
   seat             Seat      @relation(fields: [seat_id], references: [id])
-  payment          Payment?
 
   @@map("tickets")
 }
 
 model Payment {
-  id            Int      @id @default(autoincrement())
-  ticket_id     Int      @unique
-  payment_method String   @db.VarChar(50) // VA, QRIS, etc
-  payment_status String   @db.VarChar(20) // pending, success, failed
-  payment_date   DateTime
+  id                Int      @id @default(autoincrement())
+  booking_reference String   @db.VarChar(100)
+  payment_method    String   @db.VarChar(50)
+  payment_status    String   @db.VarChar(20) // pending, success, failed
+  payment_date      DateTime
+  amount            Decimal  @db.Decimal(10,2)
+  xendit_invoice_id String?  @db.VarChar(100)
+  xendit_payment_id String?  @db.VarChar(100)
+  payment_url       String?  @db.VarChar(500)
 
-  ticket         Ticket   @relation(fields: [ticket_id], references: [id])
 
   @@map("payments")
 }

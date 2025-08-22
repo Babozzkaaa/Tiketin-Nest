@@ -6,7 +6,9 @@ import { JwtService } from '@nestjs/jwt';
 import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
-const EXPIRE_TIME = 15 * 60 * 100;
+// const EXPIRE_TIME = 4 * 60 * 60 * 1000;
+// const EXPIRE_TIME = 1 * 60 * 1000;
+const EXPIRE_TIME = 15 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
@@ -21,16 +23,17 @@ export class AuthService {
     const user = await this.validateUser(dto);
     const payload = {
       email: user.email,
-      sub: {
-        name: user.name,
-      },
+      sub: user.id,
+      name: user.name,
     };
 
     return {
       user,
       backendTokens: {
         accessToken: await this.jwtService.signAsync(payload, {
-          expiresIn: '4h',
+          // expiresIn: '1min',
+          expiresIn: '15min',
+          // expiresIn: '4h',
           secret: process.env.jwtSecretKey,
         }),
         refreshToken: await this.jwtService.signAsync(payload, {
@@ -40,7 +43,6 @@ export class AuthService {
         expiresIn: new Date().setTime(new Date().getTime() + EXPIRE_TIME),
       },
     };
-    // // show time expired for accesstoken
     // this.logger.info(
     //   `Token expired at ${new Date().setTime(new Date().getTime() + EXPIRE_TIME)}`,
     // );
@@ -60,15 +62,22 @@ export class AuthService {
     const payload = {
       email: user.email,
       sub: user.sub,
+      name: user.name,
     };
 
     return {
       accessToken: await this.jwtService.signAsync(payload, {
-        expiresIn: '4h',
+        // expiresIn: '1min',
+        expiresIn: '15min',
+        // expiresIn: '4h',
         secret: process.env.jwtSecretKey,
       }),
 
       expiresIn: new Date().setTime(new Date().getTime() + EXPIRE_TIME),
     };
+  }
+
+  async logout(user: any) {
+    return { message: 'Logout successful' };
   }
 }

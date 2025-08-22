@@ -1,0 +1,30 @@
+
+import { describe, beforeEach, expect, it, } from 'vitest'
+import { Test } from '@nestjs/testing';
+import { {{className}}Service } from '../services/auth.service';
+import { {{className}}HttpController } from '../controllers/auth.controller';
+import { UsersModule } from '@src/app/users';
+import { DatabaseModule } from '@src/platform/database/database.module';
+import { PrismaService } from '@src/platform/database/services/prisma.service';
+import { AppModule } from '@src/app/app.module';
+import { MainModule } from '@src/main.module';
+
+describe('{{className}}Service', () => {
+    let authController: {{className}}HttpController;
+    let authService: {{className}}Service;
+
+    beforeEach(async () => {
+        const moduleRef = await Test.createTestingModule({
+            imports: [UsersModule, MainModule],
+            controllers: [{{className}}HttpController],
+            providers: [{{className}}Service,],
+        }).compile();
+
+        authService = moduleRef.get<{{className}}Service>({{className}}Service);
+        authController = moduleRef.get<{{className}}HttpController>({{className}}HttpController);
+    });
+
+    it('its defined', () => {
+        expect(authService).toBeDefined()
+    });
+});
